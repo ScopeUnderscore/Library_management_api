@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import environ
-import os
 
 
 env = environ.Env()
@@ -34,6 +33,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Token": {"type": "apiKey", "name": "Authorization", "in": "header"}
+    },
+    "USE_SESSION_AUTH": False,
+    "SECURITY_REQUIREMENTS": [{"Token": []}],
+}
+
 
 # Application definition
 
@@ -47,11 +54,14 @@ INSTALLED_APPS = [
     "library",
     "rest_framework",
     "drf_yasg",
+    "rest_framework.authtoken",
 ]
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",  # jwt token
-    ),
+    "NON_FIELD_ERRORS_KEY": "errors",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    # "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",  # Pagination class
     "PAGE_SIZE": 10,  # Number of items per page
 }
@@ -137,11 +147,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-# STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
 STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Redirect
+LOGIN_URL = "/accounts/login/"
+LOGOUT_REDIRECT_URL = "/"

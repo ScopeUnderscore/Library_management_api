@@ -1,35 +1,23 @@
-from rest_framework import serializers, viewsets, filters
-from rest_framework.permissions import AllowAny
-from django.contrib.auth.models import User
+from rest_framework import viewsets, filters, generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import generics, status
+from django.contrib.auth.models import User
 from .models import Author, Book
-from .serializers import AuthorSerializer, BookSerializer
+from .serializers import UserSerializer, AuthorSerializer, BookSerializer
+from django.shortcuts import redirect
+from rest_framework.authentication import TokenAuthentication
+
+# Redirecting to swagger_ui page
 
 
-# Serializer for User Registrationclear
-
-
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ("username", "password", "email")
-
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            password=validated_data["password"],
-            email=validated_data["email"],
-        )
-        return user
+def redirect_to_docs(request):
+    return redirect("schema-swagger-ui")  # Redirect to Swagger UI
 
 
 # View for User Registration
 class UserRegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
-    permission_classes = (AllowAny,)  # allows ayone to access this view
+    permission_classes = (AllowAny,)  # Allows anyone to access this view
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
@@ -54,16 +42,17 @@ class BookList(generics.ListCreateAPIView):
     serializer_class = BookSerializer
 
 
-# creating Viewsets
-
-
+# Creating Viewsets
 class AuthorViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     filter_backends = [filters.SearchFilter]  # Allows searching
-    search_fields = ["title"]  # search by title
+    search_fields = ["title"]  # Search by title
